@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hải Đăng Media - Dịch Vụ Mạng Xã Hội</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 450px; margin: 40px auto; background: #1e293b; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        h2 { text-align: center; color: #38bdf8; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border-radius: 6px; border: 1px call #475569; background: #0f172a; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        button:hover { background: #1d4ed8; }
+        #result { margin-top: 15px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>HẢI ĐĂNG MEDIA</h2>
+        <label>Chọn dịch vụ:</label>
+        <select id="service">
+            <option value="tiktok_follow">Tăng Follow TikTok (VIP)</option>
+            <option value="fb_like">Tăng Like Bài Viết Facebook</option>
+        </select>
+
+        <label>Nhập Link (Trang cá nhân / Bài viết):</label>
+        <input type="text" id="link" placeholder="https://...">
+
+        <label>Số lượng cần tăng:</label>
+        <input type="number" id="quantity" placeholder="1000">
+
+        <button onclick="submitOrder()">Gửi Đơn Hàng Tự Động</button>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        async function submitOrder() {
+            let service = document.getElementById('service').value;
+            let link = document.getElementById('link').value;
+            let quantity = document.getElementById('quantity').value;
+            let result = document.getElementById('result');
+
+            if (!link || !quantity) {
+                alert("Vui lòng điền đủ link và số lượng!");
+                return;
+            }
+
+            result.innerText = "Đang kết nối hệ thống gửi đơn...";
+            result.style.color = "#facc15";
+
+            try {
+                let res = await fetch('/api/order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ service, link, quantity })
+                });
+                let data = await res.json();
+
+                if (data.success) {
+                    result.innerText = "✅ " + data.message;
+                    result.style.color = "#4ade80";
+                } else {
+                    result.innerText = "❌ " + data.message;
+                    result.style.color = "#f87171";
+                }
+            } catch (e) {
+                result.innerText = "❌ Lỗi kết nối máy chủ API!";
+                result.style.color = "#f87171";
+            }
+        }
+    </script>
+</body>
+</html>
