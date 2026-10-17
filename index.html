@@ -1,74 +1,271 @@
-<!DOCTYPE html>
-<html lang="vi">
+ <!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hải Đăng Media - Dịch Vụ Mạng Xã Hội</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 20px; }
-        .container { max-width: 450px; margin: 40px auto; background: #1e293b; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        h2 { text-align: center; color: #38bdf8; }
-        label { display: block; margin-top: 15px; font-weight: bold; }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border-radius: 6px; border: 1px call #475569; background: #0f172a; color: #fff; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        button:hover { background: #1d4ed8; }
-        #result { margin-top: 15px; text-align: center; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>HẢI ĐĂNG MEDIA</h2>
-        <label>Chọn dịch vụ:</label>
-        <select id="service">
-            <option value="tiktok_follow">Tăng Follow TikTok (VIP)</option>
-            <option value="fb_like">Tăng Like Bài Viết Facebook</option>
-        </select>
-
-        <label>Nhập Link (Trang cá nhân / Bài viết):</label>
-        <input type="text" id="link" placeholder="https://...">
-
-        <label>Số lượng cần tăng:</label>
-        <input type="number" id="quantity" placeholder="1000">
-
-        <button onclick="submitOrder()">Gửi Đơn Hàng Tự Động</button>
-        <p id="result"></p>
-    </div>
-
+    <title>HẢI ĐĂNG MEDIA - Hệ Thống SMM Panel Tự Động</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script>
-        async function submitOrder() {
-            let service = document.getElementById('service').value;
-            let link = document.getElementById('link').value;
-            let quantity = document.getElementById('quantity').value;
-            let result = document.getElementById('result');
-
-            if (!link || !quantity) {
-                alert("Vui lòng điền đủ link và số lượng!");
-                return;
-            }
-
-            result.innerText = "Đang kết nối hệ thống gửi đơn...";
-            result.style.color = "#facc15";
-
-            try {
-                let res = await fetch('/api/order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ service, link, quantity })
-                });
-                let data = await res.json();
-
-                if (data.success) {
-                    result.innerText = "✅ " + data.message;
-                    result.style.color = "#4ade80";
-                } else {
-                    result.innerText = "❌ " + data.message;
-                    result.style.color = "#f87171";
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: { cyber: { dark: '#0b0f19', card: '#111827', cyan: '#00f2fe', blue: '#4facfe' } }
                 }
-            } catch (e) {
-                result.innerText = "❌ Lỗi kết nối máy chủ API!";
-                result.style.color = "#f87171";
             }
         }
     </script>
+    <style>
+        body { background-color: #0b0f19; color: #f1f5f9; }
+        .glass { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- NAVBAR -->
+    <header class="sticky top-0 z-50 glass border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between">
+            <a href="#" class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center font-black text-slate-950 text-lg">HD</div>
+                <div>
+                    <div class="font-black text-lg text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">HẢI ĐĂNG MEDIA</div>
+                    <div class="text-[9px] text-slate-400 uppercase tracking-widest">SMM Panel 24/24</div>
+                </div>
+            </a>
+
+            <!-- Auth Status / Menu -->
+            <div id="authNav" class="flex items-center space-x-3">
+                <div id="guestMenu" class="flex items-center space-x-2">
+                    <button onclick="openModal('loginModal')" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 transition">Đăng Nhập</button>
+                    <button onclick="openModal('registerModal')" class="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 transition">Đăng Ký</button>
+                </div>
+                <div id="userMenu" class="hidden flex items-center space-x-3">
+                    <div class="text-right">
+                        <div class="text-xs font-bold text-cyan-400" id="usernameDisplay">Tài khoản</div>
+                        <div class="text-[11px] text-emerald-400 font-extrabold" id="balanceDisplay">Số dư: 0đ</div>
+                    </div>
+                    <button onclick="openModal('depositModal')" class="px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white"><i class="fa-solid fa-wallet mr-1"></i> Nạp Tiền</button>
+                    <button onclick="logout()" class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-600/20 text-rose-400 hover:bg-rose-600/30"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
+        <!-- WELCOME BANNER -->
+        <div class="glass rounded-3xl p-6 sm:p-8 mb-8 border-cyan-500/30 text-center relative overflow-hidden">
+            <h1 class="text-2xl sm:text-4xl font-black mb-2">HỆ THỐNG DỊCH VỤ MXH TỰ ĐỘNG</h1>
+            <p class="text-xs sm:text-sm text-slate-400 mb-6">Tăng Follow, Like, View & Chạy Ads tốc độ cao. An toàn - Uy tín - Giá tốt nhất!</p>
+            <div class="flex justify-center gap-4">
+                <a href="https://zalo.me/0364243711" target="_blank" class="px-5 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-black text-xs uppercase"><i class="fa-solid fa-headset mr-1"></i> Zalo: 0364 243 711</a>
+            </div>
+        </div>
+
+        <!-- ORDER DASHBOARD (Ẩn nếu chưa đăng nhập) -->
+        <div id="orderSection" class="glass rounded-3xl p-6 sm:p-8 border-slate-700">
+            <h2 class="text-lg font-black text-cyan-400 mb-6 flex items-center"><i class="fa-solid fa-cart-shopping mr-2"></i> Tạo Đơn Hàng Mới</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Chọn Dịch Vụ</label>
+                    <select id="serviceSelect" onchange="calculateTotal()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white">
+                        <option value="44" data-price="44">TikTok - Follower Việt (44đ / 1 sub)</option>
+                        <option value="17" data-price="17">TikTok - Tim Video (17đ / 1 tim)</option>
+                        <option value="22" data-price="22">Facebook - Like Bài Viết (22đ / 1 like)</option>
+                        <option value="80000" data-price="80000" data-flat="true">TikTok - Gói Xu Hướng Cơ Bản (80.000đ / Clip)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Nhập Link (Profile / Video / Bài viết)</label>
+                    <input type="text" id="orderLink" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Số Lượng Cần Mua</label>
+                    <input type="number" id="orderQty" value="1000" min="1" oninput="calculateTotal()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white">
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl flex justify-between items-center border border-slate-800">
+                    <span class="text-xs font-bold text-slate-400">Tổng tiền thanh toán:</span>
+                    <span id="totalPrice" class="text-lg font-black text-emerald-400">44,000đ</span>
+                </div>
+
+                <button onclick="createOrder()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black text-xs uppercase shadow-lg">Thanh Toán & Tạo Đơn</button>
+            </div>
+            <div id="orderMsg" class="mt-4 text-center text-xs font-bold"></div>
+        </div>
+
+        <div id="loginRequiredMsg" class="glass rounded-3xl p-8 text-center border-amber-500/30">
+            <h3 class="text-base font-black text-amber-400 mb-2">⚠️ Vui lòng Đăng Nhập để sử dụng hệ thống đặt đơn</h3>
+            <p class="text-xs text-slate-400 mb-4">Nếu chưa có tài khoản, bạn có thể đăng ký hoàn toàn miễn phí chỉ trong 5 giây!</p>
+            <button onclick="openModal('loginModal')" class="px-6 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-black text-xs uppercase">Đăng Nhập Ngay</button>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="glass border-t border-slate-800 py-6 text-center text-xs text-slate-400 mt-12">
+        © 2026 HẢI ĐĂNG MEDIA • Hotline: 0364 243 711
+    </footer>
+
+    <!-- MODAL ĐĂNG NHẬP -->
+    <div id="loginModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
+        <div class="glass rounded-3xl p-6 w-full max-w-md border-slate-700 relative">
+            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-black text-cyan-400 mb-4">ĐĂNG NHẬP HỆ THỐNG</h3>
+            <div class="space-y-3">
+                <input type="text" id="loginUser" placeholder="Tên tài khoản" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white">
+                <input type="password" id="loginPass" placeholder="Mật khẩu" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white">
+                <button onclick="handleLogin()" class="w-full py-3 rounded-xl bg-cyan-500 text-slate-950 font-black text-xs uppercase">Đăng Nhập</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ĐĂNG KÝ -->
+    <div id="registerModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
+        <div class="glass rounded-3xl p-6 w-full max-w-md border-slate-700 relative">
+            <button onclick="closeModal('registerModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-black text-cyan-400 mb-4">ĐĂNG KÝ TÀI KHOẢN MỚI</h3>
+            <div class="space-y-3">
+                <input type="text" id="regUser" placeholder="Tên tài khoản muốn tạo" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white">
+                <input type="password" id="regPass" placeholder="Mật khẩu" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xs text-white">
+                <button onclick="handleRegister()" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black text-xs uppercase">Đăng Ký Ngay</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NẠP TIỀN -->
+    <div id="depositModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
+        <div class="glass rounded-3xl p-6 w-full max-w-md border-slate-700 relative text-center">
+            <button onclick="closeModal('depositModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-lg font-black text-emerald-400 mb-2">QUÉT MÃ QR NẠP TIỀN TỰ ĐỘNG</h3>
+            <p class="text-xs text-slate-400 mb-4">Chuyển khoản đúng nội dung để được cộng tiền tự động vào tài khoản!</p>
+            
+            <div class="bg-white p-4 rounded-2xl inline-block mb-4">
+                <!-- Thay số tài khoản và ngân hàng của bạn vào đây -->
+                <img src="https://img.vietqr.io/image/MB-0364243711-compact.png?amount=50000&addInfo=nap_tien_" id="qrImg" class="w-48 h-48 mx-auto object-contain">
+            </div>
+            
+            <div class="bg-slate-900 p-3 rounded-xl text-xs text-left space-y-1 mb-4 border border-slate-800">
+                <div>🏦 Ngân hàng: <span class="text-white font-bold">MB Bank / ACB</span></div>
+                <div>💳 Số tài khoản: <span class="text-cyan-400 font-bold">0364243711</span></div>
+                <div>👤 Chủ tài khoản: <span class="text-white font-bold">HAI DANG MEDIA</span></div>
+                <div>📝 Nội dung chuyển khoản: <span id="transferSyntax" class="text-amber-400 font-bold">nap_tien_haidang</span></div>
+            </div>
+
+            <button onclick="simulateDeposit()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase">Tôi đã chuyển khoản (Cộng Test)</button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC QUẢN LÝ TÀI KHOẢN & NẠP TIỀN -->
+    <script>
+        let currentUser = localStorage.getItem('hdm_user');
+        let balance = parseFloat(localStorage.getItem('hdm_balance')) || 0;
+
+        function updateUI() {
+            if (currentUser) {
+                document.getElementById('guestMenu').classList.add('hidden');
+                document.getElementById('userMenu').classList.remove('hidden');
+                document.getElementById('orderSection').classList.remove('hidden');
+                document.getElementById('loginRequiredMsg').classList.add('hidden');
+                document.getElementById('usernameDisplay').innerText = currentUser;
+                document.getElementById('balanceDisplay').innerText = "Số dư: " + balance.toLocaleString('vi-VN') + "đ";
+                document.getElementById('transferSyntax').innerText = "nap_tien_" + currentUser;
+                document.getElementById('qrImg').src = `https://img.vietqr.io/image/MB-0364243711-compact.png?amount=50000&addInfo=nap_tien_${currentUser}`;
+            } else {
+                document.getElementById('guestMenu').classList.remove('hidden');
+                document.getElementById('userMenu').classList.add('hidden');
+                document.getElementById('orderSection').classList.add('hidden');
+                document.getElementById('loginRequiredMsg').classList.remove('hidden');
+            }
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function handleRegister() {
+            let u = document.getElementById('regUser').value.trim();
+            let p = document.getElementById('regPass').value.trim();
+            if(!u || !p) { alert("Vui lòng điền đủ thông tin!"); return; }
+            localStorage.setItem('hdm_user', u);
+            localStorage.setItem('hdm_pass', p);
+            localStorage.setItem('hdm_balance', '10000'); // Tặng 10k trải nghiệm
+            currentUser = u;
+            balance = 10000;
+            alert("Đăng ký thành công! Tặng bạn 10,000đ số dư trải nghiệm.");
+            closeModal('registerModal');
+            updateUI();
+        }
+
+        function handleLogin() {
+            let u = document.getElementById('loginUser').value.trim();
+            let p = document.getElementById('loginPass').value.trim();
+            let savedPass = localStorage.getItem('hdm_pass');
+            let savedUser = localStorage.getItem('hdm_user');
+
+            if(u === savedUser && p === savedPass) {
+                currentUser = u;
+                balance = parseFloat(localStorage.getItem('hdm_balance')) || 0;
+                alert("Đăng nhập thành công!");
+                closeModal('loginModal');
+                updateUI();
+            } else {
+                alert("Sai tên tài khoản hoặc mật khẩu!");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('hdm_user');
+            currentUser = null;
+            updateUI();
+        }
+
+        function calculateTotal() {
+            let select = document.getElementById('serviceSelect');
+            let opt = select.options[select.selectedIndex];
+            let price = parseFloat(opt.getAttribute('data-price'));
+            let isFlat = opt.getAttribute('data-flat') === 'true';
+            let qty = parseInt(document.getElementById('orderQty').value) || 0;
+
+            let total = isFlat ? price : (price * qty);
+            document.getElementById('totalPrice').innerText = Math.round(total).toLocaleString('vi-VN') + 'đ';
+        }
+
+        function createOrder() {
+            let link = document.getElementById('orderLink').value.trim();
+            let select = document.getElementById('serviceSelect');
+            let opt = select.options[select.selectedIndex];
+            let price = parseFloat(opt.getAttribute('data-price'));
+            let isFlat = opt.getAttribute('data-flat') === 'true';
+            let qty = parseInt(document.getElementById('orderQty').value) || 0;
+            let total = isFlat ? price : (price * qty);
+
+            if(!link) { alert("Vui lòng nhập link cần tăng!"); return; }
+            if(balance < total) { alert("Số dư không đủ! Vui lòng nạp thêm tiền."); openModal('depositModal'); return; }
+
+            balance -= total;
+            localStorage.setItem('hdm_balance', balance);
+            updateUI();
+
+            let msg = document.getElementById('orderMsg');
+            msg.innerText = "✅ Tạo đơn thành công! Hệ thống đã trừ " + total.toLocaleString('vi-VN') + "đ vào tài khoản.";
+            msg.style.color = "#4ade80";
+        }
+
+        function simulateDeposit() {
+            balance += 50000; // Cộng giả lập 50k
+            localStorage.setItem('hdm_balance', balance);
+            updateUI();
+            closeModal('depositModal');
+            alert("✅ Nạp tiền thành công! Đã cộng 50,000đ vào tài khoản của bạn.");
+        }
+
+        updateUI();
+        calculateTotal();
+    </script>
 </body>
 </html>
+      
